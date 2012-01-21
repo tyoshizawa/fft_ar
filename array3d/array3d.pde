@@ -6,16 +6,17 @@ Minim minim;
 AudioInput in;
 FFT fft;
 
-int CELL_SIZE      = 20;
-int BAND_NUM       = 40;
-int BAND_SIZE      = 5;
-int SPECTRUM_NUM   = 32;
+int CELL_SIZE      = 40;
+int CELL_HEIGHT    = 40;
+int BAND_NUM       = 20;
+int BAND_SIZE      = 10;
+int SPECTRUM_NUM   = 16;
 int BAND_HUE_START = 140;
 int BAND_HUE_END   = 220;
 int COUNT_MAX      = 15;
 int COUNT_INVERT_R = 4;
-
-float SPECTRUM_CST = 0.6;
+float SPECTRUM_CST = 0.5;
+// base color 0, 0, 50
 
 Boolean started     = false;
 float cam_pos_len   = BAND_NUM * CELL_SIZE;
@@ -24,19 +25,9 @@ float cam_pos_theta = PI / 4;
 int shift_mul       = 1;
 int [][] spectrum   = new int[BAND_NUM][SPECTRUM_NUM];
 
-public void init() {
-  /*frame.dispose();*/
-  /*frame.setUndecorated(true); // works.*/
-
-  // call PApplet.init() to take care of business
-  super.init();
-}
-
 void setup()
 {
   size(848,480,OPENGL);
-  frame.setLocation(0,0);
-  frame.setBackground(new java.awt.Color(0, 0, 0));
   frameRate(60);
   smooth();
   rectMode(CORNER);
@@ -66,7 +57,7 @@ void draw()
       h = 0.0;
       for (int j=0; j<BAND_SIZE; j++)
       {
-        h = max(h, fft.getBand(i*BAND_SIZE * j));
+        h += fft.getBand(i*BAND_SIZE * j);
       }
       // draw current band cells
       h = h * SPECTRUM_CST;
@@ -175,9 +166,8 @@ void move_cam(){
   float cam_pos_x = cam_pos_l * cos(cam_pos_theta);
   float cam_pos_y = cam_pos_l * sin(cam_pos_theta);
 
-  camera(cam_pos_x, cam_pos_y, 0,
-      x_bound/2, x_bound/2, 0, 1, -1, 0);
-  perspective(theta, float(width)/float(height), 1, 2000);
+  camera(cam_pos_x, cam_pos_y, 0, 0, 0, 0, 1, -1, 0);
+  perspective(theta, float(width)/float(height), 1, 4000);
 
   // lighting
   ambientLight(50, 30, 50);
@@ -197,30 +187,38 @@ void draw_bg(Boolean calib)
   if (calib) {
     stroke(255);
     // z pararel lines
-    for(int i=0; i<=x_bound; i+=CELL_SIZE){
-      // x plane
-      line(i, 0, -z_bound, i, 0, z_bound);
-      if (i != 0){
+    for(int i=0; i<=x_bound; i+=CELL_SIZE * 2){
+      if (i == 0){
+        stroke(0,100,100);
+        strokeWeight(3);
+        line(0, i, -z_bound, 0, i, z_bound);
+        stroke(255);
+        strokeWeight(1);
+      } else {
+        // x plane
+        line(i, 0, -z_bound, i, 0, z_bound);
         // y plane
         line(0, i, -z_bound, 0, i, z_bound);
       }
     }
     // z parpendicular lines
-    for(int i=-z_bound; i<=z_bound; i+=CELL_SIZE){
+    for(int i=-z_bound; i<=z_bound; i+=CELL_SIZE * 2){
       // x plane
       line(0, 0, i, x_bound, 0, i);
       // y plane
       line(0, 0, i, 0, x_bound, i);
     }
   } else {
-    stroke(0);
+    noStroke();
     // bg
-    fill(0);
+    fill(0, 0, 50);
     pushMatrix();
     rotateX(-PI/2);
-    rect(x_bound, -z_bound, 50, z_bound*2);
+    // x plane
+    rect(0, -z_bound - 200, x_bound + 200, z_bound * 2 + 400);
     rotateY(-PI/2);
-    rect(x_bound, -z_bound, 50, z_bound*2);
+    // y plane
+    rect(0, -z_bound - 200, x_bound + 200, z_bound * 2 + 400);
     popMatrix();
     // z axis
     line(0.5, 0.5, -z_bound, 1, 1, z_bound);
@@ -231,9 +229,9 @@ void draw_bg(Boolean calib)
 void draw_cells(int i)
 {
   int z = (i - BAND_NUM / 2) * CELL_SIZE;
-
+  stroke(0,0,50);
   pushMatrix();
-  translate(SPECTRUM_NUM / 2 * CELL_SIZE + CELL_SIZE / 2, - CELL_SIZE / 2, z + CELL_SIZE / 2);
+  translate(SPECTRUM_NUM / 2 * CELL_SIZE + CELL_SIZE / 2, - CELL_HEIGHT / 2, z + CELL_SIZE / 2);
   for (int j=0; j<SPECTRUM_NUM; j++){
     int c = get_cell_normalized_count(i, j);
     float count_racio = float(abs(c)) / COUNT_MAX;
@@ -242,25 +240,25 @@ void draw_cells(int i)
     if (c > 0){
       fill(hue, 90, 80 + 20 * count_racio);
     } else {
-      fill(hue, 20 * count_racio, 50 + 10 * count_racio);
+      fill(hue, 20 * count_racio, 50 + 5 * count_racio);
     }
     if (j < SPECTRUM_NUM / 2) {
       // x plane
       translate(-CELL_SIZE, 0, 0);
       pushMatrix();
-      translate(0, CELL_SIZE * abs(count_racio), 0);
-      box(CELL_SIZE);
+      translate(0, CELL_HEIGHT * abs(count_racio), 0);
+      box(CELL_SIZE, CELL_HEIGHT, CELL_SIZE);
       popMatrix();
     } else {
       if (j == SPECTRUM_NUM / 2){
-        translate(-CELL_SIZE, CELL_SIZE, 0);
+        translate(-(CELL_HEIGHT + CELL_SIZE) / 2, CELL_SIZE, 0);
         box(CELL_SIZE);
       } else {
         // y plane
         translate(0, CELL_SIZE, 0);
         pushMatrix();
-        translate(CELL_SIZE*abs(count_racio),0, 0);
-        box(CELL_SIZE);
+        translate(CELL_HEIGHT * abs(count_racio),0, 0);
+        box(CELL_HEIGHT, CELL_SIZE, CELL_SIZE);
         popMatrix();
       }
     }
