@@ -151,6 +151,7 @@ void increment_cell_count(int i)
     if (spectrum[i][j] >= COUNT_MAX){
       if ( higher_on ) spectrum[i][j] = COUNT_MAX;
       else spectrum[i][j] = - COUNT_MAX * COUNT_INVERT_R;
+      /*spectrum[i][j] = - COUNT_MAX * COUNT_INVERT_R;*/
     } else if(spectrum[i][j] != 0) {
       spectrum[i][j]++;
     }
@@ -231,7 +232,7 @@ void draw_cells(int i)
   int z = (i - BAND_NUM / 2) * CELL_SIZE;
   stroke(0,0,50);
   pushMatrix();
-  translate(SPECTRUM_NUM / 2 * CELL_SIZE + CELL_SIZE / 2, - CELL_HEIGHT / 2, z + CELL_SIZE / 2);
+  translate(-CELL_SIZE / 2, - CELL_HEIGHT / 2, z + CELL_SIZE / 2);
   for (int j=0; j<SPECTRUM_NUM; j++){
     int c = get_cell_normalized_count(i, j);
     float count_racio = float(abs(c)) / COUNT_MAX;
@@ -244,14 +245,14 @@ void draw_cells(int i)
     }
     if (j < SPECTRUM_NUM / 2) {
       // x plane
-      translate(-CELL_SIZE, 0, 0);
+      translate(CELL_SIZE, 0, 0);
       pushMatrix();
       translate(0, CELL_HEIGHT * abs(count_racio), 0);
       box(CELL_SIZE, CELL_HEIGHT, CELL_SIZE);
       popMatrix();
     } else {
       if (j == SPECTRUM_NUM / 2){
-        translate(-(CELL_HEIGHT + CELL_SIZE) / 2, CELL_SIZE, 0);
+        translate(-SPECTRUM_NUM/2 * CELL_SIZE -(CELL_HEIGHT - CELL_SIZE) / 2, CELL_SIZE, 0);
         box(CELL_SIZE);
       } else {
         // y plane
