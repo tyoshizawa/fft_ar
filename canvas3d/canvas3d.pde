@@ -9,6 +9,7 @@ float cam_pos_alpha = 30;
 float cam_pos_theta = PI / 4;
 int shift_mul = 1;
 
+// TEST
 
 public void init() {
   /*frame.dispose();*/

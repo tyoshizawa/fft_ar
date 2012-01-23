@@ -18,6 +18,7 @@ int COUNT_MAX_KEEP = 2;
 int COUNT_INVERT_R = 4;
 float SPECTRUM_CST = 0.8;
 // base color 0, 0, 50
+// test
 
 Boolean started     = false;
 float cam_pos_len   = BAND_NUM * CELL_SIZE;
