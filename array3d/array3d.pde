@@ -9,13 +9,14 @@ FFT fft;
 int CELL_SIZE      = 40;
 int CELL_HEIGHT    = 40;
 int BAND_NUM       = 20;
-int BAND_SIZE      = 10;
+int BAND_SIZE      = 6;
 int SPECTRUM_NUM   = 16;
-int BAND_HUE_START = 140;
-int BAND_HUE_END   = 220;
-int COUNT_MAX      = 15;
+int BAND_HUE_START = 25;
+int BAND_HUE_END   = 35;
+int COUNT_MAX      = 20;
+int COUNT_MAX_KEEP = 2;
 int COUNT_INVERT_R = 4;
-float SPECTRUM_CST = 0.5;
+float SPECTRUM_CST = 0.8;
 // base color 0, 0, 50
 
 Boolean started     = false;
@@ -148,7 +149,7 @@ void increment_cell_count(int i)
 {
   Boolean higher_on = false;
   for (int j=SPECTRUM_NUM-1; j>=0; j--){
-    if (spectrum[i][j] >= COUNT_MAX){
+    if (spectrum[i][j] >= COUNT_MAX + COUNT_MAX_KEEP){
       if ( higher_on ) spectrum[i][j] = COUNT_MAX;
       else spectrum[i][j] = - COUNT_MAX * COUNT_INVERT_R;
       /*spectrum[i][j] = - COUNT_MAX * COUNT_INVERT_R;*/
@@ -171,10 +172,10 @@ void move_cam(){
   perspective(theta, float(width)/float(height), 1, 4000);
 
   // lighting
-  ambientLight(50, 30, 50);
-  directionalLight(0,0,60,-1,-1.5,-1);
-  pointLight(0,0,50,cam_pos_x * 2, cam_pos_y * 2, 0);
-  spotLight(0,20,30, cam_pos_x * 2, cam_pos_y * 2, 0, -1, -1, 0, PI/4, 10);
+  ambientLight(50, 10, 50);
+  directionalLight(0,0,60,-cam_pos_x, -cam_pos_y, -1);
+  pointLight(0,0,50,cam_pos_x * 4, cam_pos_y * 4, 0);
+// spotLight(0,20,30, cam_pos_x * 2, cam_pos_y * 2, 0, -1, -1, 0, PI/4, 10);
 }
 
 
@@ -212,14 +213,14 @@ void draw_bg(Boolean calib)
   } else {
     noStroke();
     // bg
-    fill(0, 0, 50);
+    fill(34, 0.0, 50);
     pushMatrix();
     rotateX(-PI/2);
     // x plane
-    rect(0, -z_bound - 200, x_bound + 200, z_bound * 2 + 400);
+    rect(0, -z_bound - 1000, x_bound + 1000, z_bound * 2 + 2000);
     rotateY(-PI/2);
     // y plane
-    rect(0, -z_bound - 200, x_bound + 200, z_bound * 2 + 400);
+    rect(0, -z_bound - 1000, x_bound + 1000, z_bound * 2 + 2000);
     popMatrix();
     // z axis
     line(0.5, 0.5, -z_bound, 1, 1, z_bound);
@@ -230,24 +231,26 @@ void draw_bg(Boolean calib)
 void draw_cells(int i)
 {
   int z = (i - BAND_NUM / 2) * CELL_SIZE;
-  stroke(0,0,50);
   pushMatrix();
   translate(-CELL_SIZE / 2, - CELL_HEIGHT / 2, z + CELL_SIZE / 2);
   for (int j=0; j<SPECTRUM_NUM; j++){
     int c = get_cell_normalized_count(i, j);
     float count_racio = float(abs(c)) / COUNT_MAX;
-    int hue = BAND_HUE_START+(BAND_HUE_END-BAND_HUE_START)*i/BAND_NUM;
+    int hue = BAND_HUE_START+int((BAND_HUE_END-BAND_HUE_START)*float(i)/BAND_NUM);
     // set color
     if (c > 0){
-      fill(hue, 90, 80 + 20 * count_racio);
+//      fill(hue, 90, 80 + 20 * count_racio);
+      fill(hue, 35, int(60 + 30 * count_racio));
     } else {
-      fill(hue, 20 * count_racio, 50 + 5 * count_racio);
+      fill(hue, int(20 * count_racio), int(50 + 5 * count_racio));
     }
+    // set stroke
+    if (c == 0) noStroke(); else stroke(0,0,50);
     if (j < SPECTRUM_NUM / 2) {
       // x plane
       translate(CELL_SIZE, 0, 0);
       pushMatrix();
-      translate(0, CELL_HEIGHT * abs(count_racio), 0);
+      translate(0, int(CELL_HEIGHT * count_racio), 0);
       box(CELL_SIZE, CELL_HEIGHT, CELL_SIZE);
       popMatrix();
     } else {
@@ -258,7 +261,7 @@ void draw_cells(int i)
         // y plane
         translate(0, CELL_SIZE, 0);
         pushMatrix();
-        translate(CELL_HEIGHT * abs(count_racio),0, 0);
+        translate(int(CELL_HEIGHT * count_racio),0, 0);
         box(CELL_HEIGHT, CELL_SIZE, CELL_SIZE);
         popMatrix();
       }
